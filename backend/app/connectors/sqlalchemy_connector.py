@@ -60,6 +60,7 @@ class SQLAlchemyConnector(BaseConnector):
                     max_length=getattr(t, "length", None),
                     precision=getattr(t, "precision", None),
                     scale=getattr(t, "scale", None),
+                    sa_type=t,
                 )
             )
         return TableSchema(name=table, columns=out)
