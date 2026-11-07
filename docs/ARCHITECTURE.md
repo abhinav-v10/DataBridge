@@ -46,10 +46,11 @@ Migration run lifecycle: `CREATED → EXTRACTING → PROFILING → TRANSFORMING 
 
 ## 4. Metadata database schema (SQLAlchemy models)
 - `connections` id, name, role(source/target), db_type, host, port, database, username, `password_enc`, schema, created_at
-- `schema_mappings` id, name, source_table, target_table, key_columns(JSON), config(JSON: column maps, casts, transforms), created_at
+- `schema_mappings` id, name(unique), source_connection_id, target_connection_id, source_table, target_table, key_columns(JSON), config(JSON: `columns[{source_column,target_column,origin,confidence}]`, `min_confidence`), created_at  **(implemented; casts/transforms still planned)**
 - `migration_runs` id(uuid), source_conn_id, target_conn_id, mapping_ids, config(JSON), status, started_at, finished_at, score, verdict
 - `stage_logs` id, run_id, stage, status, started_at, finished_at, rows_in, rows_out, error
-- `profile_results` id, run_id|null, table, column, metrics(JSON)
+- `profile_runs` id, connection_id, table_name, status, include_values_requested, options(JSON), row_count, column_count, primary_key(JSON), table_metrics(JSON), error, duration_ms, created_at  **(implemented)**
+- `profile_column_results` id, run_id, position, column_name, status, sensitive, canonical(JSON), metrics(JSON), redacted(JSON), skipped(JSON), errors(JSON)  **(implemented; replaces the planned `profile_results`; value-bearing metrics are never stored)**
 - `recon_results` id, run_id, table, check_type, status, summary(JSON), duration_ms
 - `dq_results` id, run_id, rule_id, rule_name, table, records_tested, failed, pass_pct, severity, details(JSON)
 - `exceptions` id, run_id, table, column, pk, severity, reason, source_value, target_value, status, created_at
@@ -76,7 +77,7 @@ financial column outside tolerance, missing PK rows above threshold, broken RI) 
 regardless of score. Output includes per-component values, weights, and the reason list.
 
 ## 8. API surface (prefix `/api`)
-connections (POST, GET, DELETE, POST /test) · tables · schema/{table} · profiling/run · schema-mappings (CRUD + preview + validate) ·
+connections (POST, GET, DELETE, POST /test) · tables · schema/{table} · profiling/run, profiling/runs, profiling/runs/{id} · schema-comparison (the mapping preview) · schema-mappings (POST, GET, GET/{id}, DELETE, POST /{id}/validate) ·
 migrations (POST, GET, GET/{id}, logs) · reconciliation/run, /{run_id} · quality/run, /{run_id} · anomalies/run ·
 exceptions (GET filters, PATCH) · reports/{run_id}?format=csv|pdf · dashboard/summary · testdata (seed, corrupt).
 
@@ -91,7 +92,7 @@ exceptions (GET filters, PATCH) · reports/{run_id}?format=csv|pdf · dashboard/
 ## 10. Roadmap / checklist
 - [x] Phase 1 architecture (this doc)
 - [ ] Phase 2 backend foundation: config, crypto, metadata models, connector registry, connection API, tests
-- [ ] Phase 3 profiling, mapping, transforms
+- [~] Phase 3 profiling, mapping, transforms — profiling + schema comparison/mapping + their APIs done (see DEVLOG, "Phase 1"); transforms pending
 - [ ] Phase 4 ETL (batch, retry, idempotent, stage logs)
 - [ ] Phase 5 reconciliation
 - [ ] Phase 6 DQ engine, anomaly detection, scoring
