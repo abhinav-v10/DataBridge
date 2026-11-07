@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     # Fernet key used to encrypt stored connection passwords. REQUIRED outside tests.
     secret_key: str = ""
     cors_origins: list[str] = ["http://localhost:5173"]
+    # Profiling may return actual data values (min/max/top values) only when this is enabled. Default: off.
+    profiling_allow_values: bool = False
 
 
 @lru_cache
