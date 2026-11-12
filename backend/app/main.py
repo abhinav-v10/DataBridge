@@ -5,7 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import connections
+from app.api import connections, mapping, profiling
 from app.connectors.registry import supported_types
 from app.core.config import get_settings
 from app.core.db import init_engine
@@ -25,6 +25,8 @@ app.add_middleware(
     CORSMiddleware, allow_origins=get_settings().cors_origins, allow_methods=["*"], allow_headers=["*"]
 )
 app.include_router(connections.router, prefix="/api")
+app.include_router(profiling.router, prefix="/api")
+app.include_router(mapping.router, prefix="/api")
 
 
 @app.exception_handler(SecretKeyError)

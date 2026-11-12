@@ -8,6 +8,7 @@ from app.schemas.connection import (
     ConnectionOut,
     ConnectionStatus,
     ConnectionTestRequest,
+    ColumnOut,
     TableSchemaOut,
 )
 from app.services import connection_service as svc
@@ -92,4 +93,15 @@ def table_schema(conn_id: int, table_name: str, db: Session = Depends(get_sessio
         raise HTTPException(code, str(e)) from e
     finally:
         connector.dispose()
-    return TableSchemaOut(name=ts.name, columns=[c.__dict__ for c in ts.columns], primary_key=ts.primary_key)
+    return TableSchemaOut(name=ts.name, columns=[
+            ColumnOut(
+                name=c.name,
+                data_type=c.data_type,
+                nullable=c.nullable,
+                is_primary_key=c.is_primary_key,
+                max_length=c.max_length,
+                precision=c.precision,
+                scale=c.scale,
+            )
+            for c in ts.columns
+        ], primary_key=ts.primary_key)

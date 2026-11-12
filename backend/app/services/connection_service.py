@@ -5,6 +5,8 @@ from app.connectors.base import BaseConnector
 from app.connectors.registry import build_connector
 from app.core.security import decrypt_secret, encrypt_secret
 from app.models.connection import Connection
+from app.models.mapping import SchemaMapping
+from app.models.profile import ProfileRun
 from app.schemas.connection import ConnectionCreate
 
 
@@ -43,7 +45,17 @@ def get_connection(db: Session, conn_id: int) -> Connection:
 
 
 def delete_connection(db: Session, conn_id: int) -> None:
-    db.delete(get_connection(db, conn_id))
+    conn = get_connection(db, conn_id)
+    # Remove dependents explicitly (via the ORM so child rows cascade); SQLite does not enforce FK cascades.
+    for run in db.scalars(select(ProfileRun).where(ProfileRun.connection_id == conn_id)):
+        db.delete(run)
+    for m in db.scalars(
+        select(SchemaMapping).where(
+            (SchemaMapping.source_connection_id == conn_id) | (SchemaMapping.target_connection_id == conn_id)
+        )
+    ):
+        db.delete(m)
+    db.delete(conn)
     db.commit()
 
 

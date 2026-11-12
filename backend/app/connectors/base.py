@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -11,6 +12,9 @@ class ColumnInfo:
     max_length: int | None = None
     precision: int | None = None
     scale: int | None = None
+    # INTERNAL ONLY: the reflected SQLAlchemy type object. Never serialize this (API/JSON/persistence);
+    # it is excluded from repr/eq and the API builds responses from explicit fields.
+    sa_type: Any = field(default=None, repr=False, compare=False)
 
 
 @dataclass
