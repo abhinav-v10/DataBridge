@@ -40,7 +40,7 @@ def pg():
             doc jsonb, uid uuid, name varchar(30), password varchar(30), born date)"""))
         c.execute(sa.text(f"""INSERT INTO "{schema}".t
             SELECT g, (g % 50) + 0.25, now() - (g || ' days')::interval, ARRAY['a','b'],
-                   (ARRAY['sad','ok','happy'])[1 + g % 3]::"{schema}".mood, '{{"k":1}}'::jsonb, gen_random_uuid(),
+                   (ARRAY['sad','ok','happy'])[1 + g % 3]::"{schema}".mood, jsonb_build_object('k', 1), gen_random_uuid(),
                    'name' || (g % 10), 'secret-pw-' || g, DATE '2000-01-01' + g
             FROM generate_series(1, 5000) g"""))
         c.execute(sa.text(f'INSERT INTO "{schema}".t (id) VALUES (9999)'))

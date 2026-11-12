@@ -42,7 +42,7 @@ def pg_schema():
             id bigint PRIMARY KEY, amount numeric(10,2), created timestamp, tags text[],
             feeling "{schema}".mood2, code varchar(10), qty integer, note text, blob jsonb)"""))
         c.execute(sa.text(f"""INSERT INTO "{schema}".src
-            SELECT g, g + 0.5, now(), ARRAY['a'], 'ok', 'c' || g, g, '{SECRET}', 'pw-' || g, '{{"k":1}}'::jsonb
+            SELECT g, g + 0.5, now(), ARRAY['a'], 'ok', 'c' || g, g, '{SECRET}', 'pw-' || g, jsonb_build_object('k', 1)
             FROM generate_series(1, 2000) g"""))
     yield schema
     with eng.begin() as c:
