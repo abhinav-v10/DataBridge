@@ -39,6 +39,18 @@ Branch `phase-1` (uncommitted). Built in six internal checkpoints.
 - **Decisions** (ambiguities resolved conservatively): the "mapping preview" is `POST /schema-comparison`; mappings are persisted
   in Step 4 alongside profiles; failed profile runs are recorded, missing-table (client error) runs are not; auto-saved mappings
   exclude type conflicts; unmapped NOT NULL target columns are warnings (defaults are not reflected), not blockers.
-- **Verification status**: 316 passed, 11 skipped. **PostgreSQL integration tests (11) were skipped: no server was reachable
+- **Verification status (superseded by the 2026-11-12 entry below)**: 316 passed, 11 skipped. **PostgreSQL integration tests (11) were skipped: no server was reachable
   (Docker not running).** Unverified on a live server: TABLESAMPLE SYSTEM ... REPEATABLE, `SET TRANSACTION READ ONLY`,
   `set_config('statement_timeout')`, `stddev_samp`, and end-to-end enum/domain/array/timestamptz behaviour through the APIs.
+
+## 2026-11-12 — PostgreSQL integration validation
+- Ran the 11 PostgreSQL integration tests against the dedicated Docker container (`databridge-postgres`, `postgres:16`,
+  host port 5434, existing `databridge_pgdata` volume reused). Native PostgreSQL on 5432/5433 was not touched.
+- First run: all 11 errored in fixture setup. Root cause was a test bug, not product code: `sqlalchemy.text()` parsed the `:1` in
+  the JSON literal `'{"k":1}'` as a bind parameter. Fixed by using `jsonb_build_object('k', 1)` in both PostgreSQL test files.
+- After the fix: **11/11 passed against PostgreSQL 16.15; full suite 327 passed, 0 skipped.** This validates on a live server:
+  `TABLESAMPLE SYSTEM ... REPEATABLE`, `SET TRANSACTION READ ONLY` (an INSERT was rejected), `set_config('statement_timeout')`
+  (`pg_sleep` was cancelled), `stddev_samp` (matches the profiler), and enum/domain/array/timestamptz handling through the
+  profiling, comparison and mapping APIs. The tests drop their throwaway schemas; none were left behind.
+- Still not covered: PostgreSQL versions other than 16, and the metadata database running on PostgreSQL (the API tests use a
+  SQLite metadata DB).
